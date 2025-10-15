@@ -1,0 +1,37 @@
+Sessions-based API (v1)
+
+1) Upload
+   Endpoint: `POST /api/v1/sessions/:sessionId/upload` (multipart field `file`)
+   Stores file in `storage/sessions/:sessionId/input/`
+   Note: sessionId taken from path; body sessionId ignored
+
+2) Image → Video
+   Endpoint: `POST /api/v1/sessions/image-to-video`
+   Body: `{ sessionId: "<id>", images: ["image1.jpg", "image2.jpg"], duration: <seconds>, orientation: "vertical|landscape" (optional, default vertical 2160x3840; landscape 3840x2160), resolution?: "WxH" }`
+   Output: `{ jobId, status: "queued", outputFilename }`
+
+3) Video + Audio
+   Endpoint: `POST /api/v1/sessions/add-audio`
+   Body: `{ sessionId: "<id>", videoFile: "<from output/>.mp4", audioFile: "music.mp3", volume: <0..1> }`
+   Output: `{ jobId, status: "queued", outputFilename }`
+
+4) Video + Effects
+   Endpoint: `POST /api/v1/sessions/apply-effects`
+   Body: `{ sessionId: "<id>", videoFile: "<from output/>.mp4", effects: [ { type: "kenburns", direction: "zoom-in" } ], orientation: "vertical|landscape" (optional, default vertical 2160x3840; landscape 3840x2160), resolution?: "WxH" }`
+   Output: `{ jobId, status: "queued", outputFilename }`
+
+5) Overlay
+   Endpoint: `POST /api/v1/sessions/add-overlay`
+   Body: `{ sessionId: "<id>", videoFile: "<from output/>.mp4", text: "Title", subtitle: "Optional" }`
+   Output: `{ jobId, status: "queued", outputFilename }`
+
+6) Download
+   Endpoint: `GET /api/v1/sessions/:sessionId/download/:filename`
+   Note: sessionId taken from path; body sessionId ignored
+
+7) Job Status
+   Endpoint: `GET /api/v1/jobs/:jobId`
+   Checks session `queue/`, `completed/`, `failed/` for the job record
+
+Note: Use `POST /api/v1/sessions/create` to get a `sessionId`.
+Operations require `sessionId` in request body and have no `:sessionId` in URL.

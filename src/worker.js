@@ -2,23 +2,25 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const State = require('../services/StateService');
-const { runFFmpegCommand } = require('./services/FFmpegService');
+const FF = require('./services/FFmpegService');
 
-const QUEUE_DIR = path.join(State.STORAGE_ROOT, 'queue');
-const COMPLETED_DIR = path.join(State.STORAGE_ROOT, 'completed');
-const FAILED_DIR = path.join(State.STORAGE_ROOT, 'failed');
+const SESSIONS_ROOT = path.join(State.STORAGE_ROOT, 'sessions');
 
 async function listJobs() {
   try {
-    const files = await fsp.readdir(QUEUE_DIR);
-    const jsons = files.filter((f) => f.endsWith('.json'));
-    const stats = await Promise.all(jsons.map(async (f) => ({
-      name: f,
-      path: path.join(QUEUE_DIR, f),
-      stat: await fsp.stat(path.join(QUEUE_DIR, f)),
-    })));
-    stats.sort((a, b) => a.stat.mtimeMs - b.stat.mtimeMs);
-    return stats;
+    const sessions = await fsp.readdir(SESSIONS_ROOT).catch(() => []);
+    const entries = [];
+    for (const sid of sessions) {
+      const qdir = path.join(SESSIONS_ROOT, sid, 'queue');
+      const files = await fsp.readdir(qdir).catch(() => []);
+      for (const f of files.filter((x) => x.endsWith('.json'))) {
+        const p = path.join(qdir, f);
+        const stat = await fsp.stat(p).catch(() => null);
+        if (stat) entries.push({ name: f, path: p, stat });
+      }
+    }
+    entries.sort((a, b) => a.stat.mtimeMs - b.stat.mtimeMs);
+    return entries;
   } catch {
     return [];
   }
@@ -44,11 +46,19 @@ async function processNext() {
   }
 
   const startedAt = new Date().toISOString();
-  const { args = [], cwd } = data;
-  const result = await runFFmpegCommand(args, { cwd });
+  let { args, cwd } = data;
+  if (!args && data.operation) {
+    const op = data.operation;
+    if (op === 'image-to-video') args = FF.imageToVideoArgs(data.sessionId, data.params, data.outputFilename);
+    if (op === 'add-audio') args = FF.addAudioArgs(data.sessionId, data.params, data.outputFilename);
+    if (op === 'apply-effects') args = FF.applyEffectsArgs(data.sessionId, data.params, data.outputFilename);
+    if (op === 'add-overlay') args = FF.addOverlayArgs(data.sessionId, data.params, data.outputFilename);
+  }
+  const result = await FF.runFFmpegCommand(args || [], { cwd });
   const finishedAt = new Date().toISOString();
   const out = {
     ...data,
+    args,
     startedAt,
     finishedAt,
     status: result.success ? 'completed' : 'failed',
@@ -56,16 +66,16 @@ async function processNext() {
     logs: result.logs,
   };
 
-  const destDir = result.success ? COMPLETED_DIR : FAILED_DIR;
+  const sessionDir = path.dirname(path.dirname(lockPath));
+  const destDir = path.join(sessionDir, result.success ? 'completed' : 'failed');
+  await State.ensureDir(destDir);
   const destPath = path.join(destDir, path.basename(job.path));
   await State.writeJSONAtomic(destPath, out);
   await fsp.unlink(lockPath).catch(() => {});
 }
 
 async function loop() {
-  await State.ensureDir(QUEUE_DIR);
-  await State.ensureDir(COMPLETED_DIR);
-  await State.ensureDir(FAILED_DIR);
+  await State.ensureDir(SESSIONS_ROOT);
   setInterval(processNext, 2000);
 }
 

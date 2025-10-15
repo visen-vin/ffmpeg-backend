@@ -15,4 +15,10 @@ router.use('/v1/process', processRouter);
 const jobRouter = require('./v1/job');
 router.use('/v1/job', jobRouter);
 
+// New session and jobs routes (session-based API)
+const sessionsRouter = require('./v1/sessions');
+router.use('/v1/sessions', sessionsRouter);
+const jobsRouter = require('./v1/jobs');
+router.use('/v1/jobs', jobsRouter);
+
 module.exports = router;
