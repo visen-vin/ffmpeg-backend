@@ -1,0 +1,8 @@
+node_modules/
+
+# Runtime artifacts
+storage/
+*.log
+
+# macOS
+.DS_Store
