@@ -32,14 +32,5 @@ Response
 ## Jobs API (v1)
 - `GET /api/v1/jobs/:jobId` → Job status from its session (`queued|completed|failed`)
 
-## Legacy Process API (v1)
-- `POST /api/v1/process/create`
-- `POST /api/v1/process/:processId/upload`
-- `GET /api/v1/process/:processId/download/:filename`
-- `DELETE /api/v1/process/:processId`
-
-## Legacy Job API (v1)
-- `POST /api/v1/job/ffmpeg` → Queue raw ffmpeg args
-
 Worker
 - Polls per-session `storage/sessions/<id>/queue/` and writes results to `storage/sessions/<id>/{completed,failed}/`.

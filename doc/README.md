@@ -3,9 +3,8 @@
 This folder contains API documentation for the FFmpeg backend.
 
 - API Overview: `doc/api/README.md`
-- Process API: `doc/api/process.md`
-- Job API: `doc/api/job.md`
 - Sessions API: `doc/api/sessions.md`
+ - Sessions API: `doc/api/sessions.md`
 
 Conventions
 - Base API path: `/api`

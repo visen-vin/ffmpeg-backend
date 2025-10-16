@@ -10,10 +10,6 @@ router.get('/health', (req, res) => {
 });
 
 // Mount v1 routers
-const processRouter = require('./v1/process');
-router.use('/v1/process', processRouter);
-const jobRouter = require('./v1/job');
-router.use('/v1/job', jobRouter);
 
 // New session and jobs routes (session-based API)
 const sessionsRouter = require('./v1/sessions');
