@@ -346,15 +346,19 @@ const generateTopPanelOverlay = (text, attribution, canvasWidth, canvasHeight, r
   // Use reference style for white panel and serif fonts
   const layout = calculateLayout(canvasWidth, canvasHeight, 'reference');
 
-  // Override header height to fixed ratio
-  layout.headerHeight = Math.round(canvasHeight * ratio);
-  if (layout.headerHeight % 2 !== 0) layout.headerHeight -= 1; // ensure even height for yuv420
+  // Determine header height: support 'auto' (content-driven) or numeric ratio
+  const useAuto = ratio === 'auto';
+  if (!useAuto) {
+    // Fixed height based on provided ratio
+    layout.headerHeight = Math.round(canvasHeight * Number(ratio));
+    if (layout.headerHeight % 2 !== 0) layout.headerHeight -= 1; // ensure even height for yuv420
+  }
 
   // Process text based on layout
   const textData = processTextForOverlay(text, attribution, layout);
 
   // Ensure attribution stays inside the panel area with a small bottom padding
-  const bottomPaddingPx = Math.round(canvasHeight * 0.02);
+  const bottomPaddingPx = Math.round(canvasHeight * 0.05); // reduced bottom padding for tighter layout
   const maxAttrY = layout.headerHeight - bottomPaddingPx;
   if (textData.attributionY > maxAttrY) {
     textData.attributionY = maxAttrY;

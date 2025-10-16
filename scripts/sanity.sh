@@ -7,6 +7,9 @@ IMAGE=${IMAGE:-utils/image.png}
 AUDIO=${AUDIO:-utils/beep.wav}
 IMG_NAME=$(basename "$IMAGE")
 AUDIO_NAME=$(basename "$AUDIO")
+TEXT=${TEXT:-Hello World}
+SUBTITLE=${SUBTITLE:-Sanity Test}
+OVERLAY_RATIO=${OVERLAY_RATIO:-0.26}
 
 echo "== Sanity Test =="
 echo "BASE=$BASE IMAGE=$IMAGE AUDIO=$AUDIO"
@@ -66,7 +69,7 @@ poll_job "$JOB2" 30
 
 echo "\n== add-text-overlay =="
 RESP=$(curl -s -H "Content-Type: application/json" \
-  -d "{\"sessionId\":\"$SESSION\",\"videoFile\":\"$OUT2\",\"text\":\"Hello World\",\"subtitle\":\"Sanity Test\",\"position\":\"top\",\"overlayRatio\":0.29}" \
+  -d "{\"sessionId\":\"$SESSION\",\"videoFile\":\"$OUT2\",\"text\":\"$TEXT\",\"subtitle\":\"$SUBTITLE\",\"position\":\"top\",\"overlayRatio\":\"$OVERLAY_RATIO\"}" \
   "$BASE/v1/sessions/add-text-overlay")
 echo "$RESP"
 JOB3=$(echo "$RESP" | sed -E 's/.*"jobId":"?([^"}]+)"?.*/\1/')

@@ -203,8 +203,13 @@ async function addTextOverlayArgs(sessionId, params, outputFilename) {
     // Get video dimensions
     const { width, height } = await getVideoDimensions(inputPath);
 
-    // Generate top panel overlay using provided ratio (default 0.30)
-    const ratio = (typeof overlayRatio === 'number' && overlayRatio > 0 && overlayRatio < 1) ? overlayRatio : 0.30;
+    // Generate top panel overlay using provided ratio or 'auto' for content-driven height
+    let ratio = 0.30;
+    if (overlayRatio === 'auto') {
+      ratio = 'auto';
+    } else if (typeof overlayRatio === 'number' && overlayRatio > 0 && overlayRatio < 1) {
+      ratio = overlayRatio;
+    }
     const svgContent = generateTopPanelOverlay(text, subtitle, width, height, ratio);
     
     // Create temporary SVG file

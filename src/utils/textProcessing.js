@@ -108,8 +108,8 @@ const calculateLayout = (canvasWidth, canvasHeight, style = 'reference') => {
   
   if (isReference) {
     // Reference style positioning
-    const topPaddingRatio = 0.10;
-    const bottomPaddingRatio = 0.025;
+    const topPaddingRatio = 0.10; // hard-coded top padding ratio (kept constant)
+    const bottomPaddingRatio = 0.005; // reduced bottom padding ratio for tighter layout
     mainTextTop = Math.round(canvasHeight * topPaddingRatio);
     
     // Calculate attribution position (will be adjusted based on actual line count)
@@ -123,7 +123,7 @@ const calculateLayout = (canvasWidth, canvasHeight, style = 'reference') => {
     const headerHeightRaw = attributionY + attrFontSize + bottomPaddingPx;
     const maxHeaderPx = Math.round(canvasHeight * 0.32);
     headerHeight = Math.min(headerHeightRaw, maxHeaderPx);
-    
+
     // Ensure even height for YUV420 compatibility
     if (headerHeight % 2 !== 0) headerHeight -= 1;
   } else {

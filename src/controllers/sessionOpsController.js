@@ -99,9 +99,11 @@ function addTextOverlay(req, res) {
 
   // Validate overlayRatio if provided
   if (overlayRatio !== undefined) {
-    const num = Number(overlayRatio);
-    if (Number.isNaN(num) || num <= 0 || num >= 1) {
-      return res.status(400).json({ error: 'overlayRatio must be a number between 0 and 1' });
+    if (overlayRatio !== 'auto') {
+      const num = Number(overlayRatio);
+      if (Number.isNaN(num) || num <= 0 || num >= 1) {
+        return res.status(400).json({ error: 'overlayRatio must be "auto" or a number between 0 and 1' });
+      }
     }
   }
   
@@ -121,7 +123,9 @@ function addTextOverlay(req, res) {
     text: text.trim(),
     subtitle: subtitle ? subtitle.trim() : '',
     position: position || 'top',
-    overlayRatio: overlayRatio !== undefined ? Number(overlayRatio) : undefined
+    overlayRatio: overlayRatio !== undefined
+      ? (overlayRatio === 'auto' ? 'auto' : Number(overlayRatio))
+      : undefined
   };
   
   // Create and queue the job
