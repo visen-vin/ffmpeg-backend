@@ -188,41 +188,6 @@ Response
 }
 ```
 
-## Add Overlay
-- `POST /add-overlay`
-- Body:
-```
-{
-  "sessionId": "<sessionId>",
-  "videoFile": "<from output/>.mp4",
-  "text": "Overlay title",
-  "subtitle": "Optional subtitle"
-}
-```
-- Notes: Adds text overlay (basic placeholder in current implementation).
-- 202 → `{ jobId, status: "queued", outputFilename }`
-
-Example (curl)
-```
-curl -sS -X POST http://localhost:3000/api/v1/sessions/add-overlay \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sessionId": "<sessionId>",
-    "videoFile": "13e5e8f7.mp4",
-    "text": "Overlay title",
-    "subtitle": "Optional subtitle"
-  }'
-```
-
-Response
-```
-{
-  "jobId": "job-<uuid>",
-  "status": "queued",
-  "outputFilename": "<random>.mp4"
-}
-```
-
 ---
 
 # Job Status

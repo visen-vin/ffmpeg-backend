@@ -15,7 +15,11 @@
   "license": "ISC",
   "dependencies": {
     "express": "^5.1.0",
+    "ffprobe-static": "^3.1.0",
+    "fluent-ffmpeg": "^2.1.3",
     "multer": "^2.0.2",
+    "node-emoji": "^2.2.0",
+    "sharp": "^0.34.4",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

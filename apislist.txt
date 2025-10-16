@@ -20,11 +20,6 @@ Sessions-based API (v1)
    Body: `{ sessionId: "<id>", videoFile: "<from output/>.mp4", effects: [ { type: "kenburns", direction: "zoom-in" } ], orientation: "vertical|landscape" (optional, default vertical 2160x3840; landscape 3840x2160), resolution?: "WxH" }`
    Output: `{ jobId, status: "queued", outputFilename }`
 
-5) Overlay
-   Endpoint: `POST /api/v1/sessions/add-overlay`
-   Body: `{ sessionId: "<id>", videoFile: "<from output/>.mp4", text: "Title", subtitle: "Optional" }`
-   Output: `{ jobId, status: "queued", outputFilename }`
-
 6) Download
    Endpoint: `GET /api/v1/sessions/:sessionId/download/:filename`
    Note: sessionId taken from path; body sessionId ignored

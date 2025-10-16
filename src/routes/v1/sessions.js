@@ -15,6 +15,6 @@ router.delete('/:sessionId', checkSessionExists, sessionController.deleteSession
 router.post('/image-to-video', checkSessionExistsBody, ops.imageToVideo);
 router.post('/add-audio', checkSessionExistsBody, ops.addAudio);
 router.post('/apply-effects', checkSessionExistsBody, ops.applyEffects);
-router.post('/add-overlay', checkSessionExistsBody, ops.addOverlay);
+router.post('/add-text-overlay', checkSessionExistsBody, ops.addTextOverlay);
 
 module.exports = router;

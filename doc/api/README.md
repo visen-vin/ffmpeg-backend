@@ -28,7 +28,6 @@ Response
   - Optional `resolution` (e.g., `"3840x2160"`) overrides orientation mapping
 - `POST /api/v1/sessions/add-audio` → Mix audio into video (sessionId in body)
 - `POST /api/v1/sessions/apply-effects` → Apply effects (sessionId in body)
-- `POST /api/v1/sessions/add-overlay` → Add text overlay (sessionId in body)
 
 ## Jobs API (v1)
 - `GET /api/v1/jobs/:jobId` → Job status from its session (`queued|completed|failed`)

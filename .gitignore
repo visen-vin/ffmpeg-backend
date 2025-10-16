@@ -6,3 +6,5 @@ storage/
 
 # macOS
 .DS_Store
+
+*.mp4
