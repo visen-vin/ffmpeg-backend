@@ -27,7 +27,7 @@ function writeJob(sessionId, operation, params, outputFilename) {
 }
 
 function imageToVideo(req, res) {
-  const { sessionId, images, duration, orientation, resolution } = req.body || {};
+  const { sessionId, images, duration } = req.body || {};
   if (!sessionId) return res.status(400).json({ error: 'Missing sessionId in body' });
   if (!Array.isArray(images) || images.length === 0) return res.status(400).json({ error: 'images[] required' });
   const inputDir = getInputDir(sessionId);
@@ -35,10 +35,8 @@ function imageToVideo(req, res) {
     if (!fs.existsSync(path.join(inputDir, f))) return res.status(404).json({ error: `Missing input file ${f}` });
   }
   const outputFilename = `${uuidv4().slice(0, 8)}.mp4`;
-  // Normalize orientation: default vertical; allow 'landscape'
-  const normOrientation = orientation === 'landscape' ? 'landscape' : 'vertical';
-  const params = { images, duration: Number(duration) || 10, orientation: normOrientation };
-  if (typeof resolution === 'string' && resolution.match(/^\d+x\d+$/)) params.resolution = resolution;
+  // Enforce vertical only
+  const params = { images, duration: Number(duration) || 10, orientation: 'vertical' };
   const job = writeJob(sessionId, 'image-to-video', params, outputFilename);
   return res.status(202).json({ jobId: job.jobId, status: job.status, outputFilename });
 }
@@ -68,7 +66,7 @@ function applyEffects(req, res) {
 }
 
 function addTextOverlay(req, res) {
-  const { sessionId, videoFile, text, subtitle, position } = req.body || {};
+  const { sessionId, videoFile, text, subtitle, position, overlayRatio } = req.body || {};
   
   // Validate required fields
   if (!sessionId) {
@@ -98,6 +96,14 @@ function addTextOverlay(req, res) {
   if (position && !validPositions.includes(position)) {
     return res.status(400).json({ error: 'Position must be one of: top, center, bottom' });
   }
+
+  // Validate overlayRatio if provided
+  if (overlayRatio !== undefined) {
+    const num = Number(overlayRatio);
+    if (Number.isNaN(num) || num <= 0 || num >= 1) {
+      return res.status(400).json({ error: 'overlayRatio must be a number between 0 and 1' });
+    }
+  }
   
   // Check if video file exists
   const outDir = getOutputDir(sessionId);
@@ -114,7 +120,8 @@ function addTextOverlay(req, res) {
     videoFile,
     text: text.trim(),
     subtitle: subtitle ? subtitle.trim() : '',
-    position: position || 'top'
+    position: position || 'top',
+    overlayRatio: overlayRatio !== undefined ? Number(overlayRatio) : undefined
   };
   
   // Create and queue the job

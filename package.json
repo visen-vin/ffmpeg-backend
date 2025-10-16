@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "worker": "node src/worker.js",
-    "dev:worker": "nodemon src/worker.js"
+    "dev:worker": "nodemon src/worker.js",
+    "sanity": "bash scripts/sanity.sh"
   },
   "keywords": [],
   "author": "",

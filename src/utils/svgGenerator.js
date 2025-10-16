@@ -72,7 +72,7 @@ const generateStyles = (fontSize, attrFontSize, isReference) => {
         font-family: "Georgia", "Times New Roman", serif; 
         font-size: ${attrFontSize}px; 
         font-weight: bold; 
-        fill: #D64A27; 
+        fill: #FF8F00; 
         text-anchor: middle; 
       }
     `;
@@ -329,3 +329,40 @@ module.exports = {
   sanitizeForSvg,
   processEmojis
 };
+
+/**
+ * Generates a fixed-height top panel overlay (white background, black text, saffron attribution)
+ * covering a ratio of the video height from the top.
+ * @param {string} text - Main text content
+ * @param {string} attribution - Attribution text (e.g., author/source)
+ * @param {number} canvasWidth - Video width
+ * @param {number} canvasHeight - Video height
+ * @param {number} ratio - Height ratio of the overlay panel (default 0.30)
+ * @returns {string} - Complete SVG markup
+ */
+const generateTopPanelOverlay = (text, attribution, canvasWidth, canvasHeight, ratio = 0.30) => {
+  const { calculateLayout, processTextForOverlay } = require('./textProcessing');
+
+  // Use reference style for white panel and serif fonts
+  const layout = calculateLayout(canvasWidth, canvasHeight, 'reference');
+
+  // Override header height to fixed ratio
+  layout.headerHeight = Math.round(canvasHeight * ratio);
+  if (layout.headerHeight % 2 !== 0) layout.headerHeight -= 1; // ensure even height for yuv420
+
+  // Process text based on layout
+  const textData = processTextForOverlay(text, attribution, layout);
+
+  // Ensure attribution stays inside the panel area with a small bottom padding
+  const bottomPaddingPx = Math.round(canvasHeight * 0.02);
+  const maxAttrY = layout.headerHeight - bottomPaddingPx;
+  if (textData.attributionY > maxAttrY) {
+    textData.attributionY = maxAttrY;
+  }
+
+  // Generate final SVG
+  return generateOverlaySVG(textData, layout);
+};
+
+// Export new generator
+module.exports.generateTopPanelOverlay = generateTopPanelOverlay;

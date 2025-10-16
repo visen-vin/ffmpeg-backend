@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 const ffmpeg = require('fluent-ffmpeg');
 const ffprobePath = require('ffprobe-static').path;
 const sharp = require('sharp');
-const { generateSimpleOverlay } = require('../utils/svgGenerator');
+const { generateTopPanelOverlay } = require('../utils/svgGenerator');
 
 ffmpeg.setFfprobePath(ffprobePath);
 
@@ -70,27 +70,30 @@ function runFFmpegCommand(args, options = {}, onProgress) {
 
 function imageToVideoArgs(_sessionId, params, outputFilename) {
   const { images = [], duration = 10, fps = 30 } = params || {};
-  // Orientation-aware resolution: default to 4K-ish sizes
-  // vertical (9:16) → 2160x3840, landscape (16:9) → 3840x2160
-  const orientation = (params && typeof params.orientation === 'string')
-    ? params.orientation.toLowerCase()
-    : 'vertical';
-  const defaultRes = orientation === 'landscape' ? '3840x2160' : '2160x3840';
-  const resolution = (params && typeof params.resolution === 'string' && params.resolution.match(/^\d+x\d+$/))
-    ? params.resolution
-    : defaultRes;
+  // Enforce vertical 4K (9:16) always
+  const resolution = '2160x3840';
+  const [w, h] = resolution.split('x');
   const per = Math.max(1, Math.floor(duration / Math.max(1, images.length)));
   const args = [];
   images.forEach((img) => {
     args.push('-loop', '1', '-t', String(per), '-i', path.join('input', img));
   });
+
+  // Build scaling filter that preserves aspect ratio and pads to 9:16
+  const scalePad = `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p`;
+
   if (images.length <= 1) {
-    args.push('-r', String(fps), '-pix_fmt', 'yuv420p', '-s', resolution, path.join('output', outputFilename));
+    args.push(
+      '-vf', scalePad,
+      '-r', String(fps),
+      '-pix_fmt', 'yuv420p',
+      path.join('output', outputFilename)
+    );
     return args;
   }
-  const [w, h] = resolution.split('x');
+
   const pre = images
-    .map((_img, i) => `[${i}:v]scale=${w}:${h},setsar=1,format=yuv420p[v${i}]`) 
+    .map((_img, i) => `[${i}:v]${scalePad}[v${i}]`)
     .join(';');
   const concat = images.map((_img, i) => `[v${i}]`).join('') + `concat=n=${images.length}:v=1:a=0,format=yuv420p[vout]`;
   const filter = `${pre};${concat}`;
@@ -182,7 +185,7 @@ function getVideoDimensions(videoPath) {
  * @returns {Promise<string[]>} - FFmpeg arguments
  */
 async function addTextOverlayArgs(sessionId, params, outputFilename) {
-  const { videoFile, text, subtitle = '', position = 'top' } = params;
+  const { videoFile, text, subtitle = '', position = 'top', overlayRatio } = params;
   
   if (!videoFile || !text) {
     throw new Error('videoFile and text are required');
@@ -199,9 +202,10 @@ async function addTextOverlayArgs(sessionId, params, outputFilename) {
   try {
     // Get video dimensions
     const { width, height } = await getVideoDimensions(inputPath);
-    
-    // Generate SVG overlay with correct parameters
-    const svgContent = generateSimpleOverlay(text, subtitle, width, height, position);
+
+    // Generate top panel overlay using provided ratio (default 0.30)
+    const ratio = (typeof overlayRatio === 'number' && overlayRatio > 0 && overlayRatio < 1) ? overlayRatio : 0.30;
+    const svgContent = generateTopPanelOverlay(text, subtitle, width, height, ratio);
     
     // Create temporary SVG file
     const svgPath = path.join(tempDir, `overlay-${Date.now()}.svg`);
@@ -219,13 +223,13 @@ async function addTextOverlayArgs(sessionId, params, outputFilename) {
     // Return FFmpeg arguments for overlay composition
     return [
       '-i', inputPath,           // Input video
-      '-i', pngPath,             // Overlay PNG
-      '-filter_complex', '[0:v][1:v]overlay=0:0',  // Overlay at position 0,0 (full coverage)
-      '-c:a', 'copy',            // Copy audio without re-encoding
+      '-i', pngPath,             // Overlay PNG (top panel)
+      '-filter_complex', '[0:v][1:v]overlay=0:0',  // Anchor overlay at top-left
+      '-c:a', 'copy',            // Copy audio
       '-c:v', 'libx264',         // Video codec
       '-preset', 'medium',       // Encoding preset
       '-crf', '20',              // Quality setting
-      '-pix_fmt', 'yuv420p',     // Pixel format for compatibility
+      '-pix_fmt', 'yuv420p',     // Pixel format
       '-movflags', '+faststart', // Optimize for web streaming
       outputPath
     ];
