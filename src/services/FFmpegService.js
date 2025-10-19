@@ -225,11 +225,14 @@ async function addTextOverlayArgs(sessionId, params, outputFilename) {
     // Clean up SVG file
     await fs.unlink(svgPath);
     
-    // Return FFmpeg arguments for overlay composition
+    // Calculate overlay panel height
+    const panelHeight = Math.round(height * (typeof ratio === 'number' ? ratio : 0.30));
+    
+    // Return FFmpeg arguments for overlay composition with video anchored to bottom
     return [
       '-i', inputPath,           // Input video
       '-i', pngPath,             // Overlay PNG (top panel)
-      '-filter_complex', '[0:v][1:v]overlay=0:0',  // Anchor overlay at top-left
+      '-filter_complex', `[0:v]crop=${width}:${height - panelHeight}:0:0,pad=${width}:${height}:0:${panelHeight}[video];[video][1:v]overlay=0:0`,  // Crop video and position at bottom, overlay panel at top
       '-c:a', 'copy',            // Copy audio
       '-c:v', 'libx264',         // Video codec
       '-preset', 'medium',       // Encoding preset
